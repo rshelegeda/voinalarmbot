@@ -209,15 +209,15 @@ async function checkPriceChanges() {
 
     // Запрашиваем актуальные цены
     // console.log("Запрос к АПИ из checkPriceChanges");
-    const response = await axios.get(
-      process.env.COINGECKO_API_URL,
-      {
-        params: {
-          ids: pairsToTrack.join(","),
-          vs_currencies: "usd",
-        },
-      }
-    );
+    // const response = await axios.get(
+    //   process.env.COINGECKO_API_URL,
+    //   {
+    //     params: {
+    //       ids: pairsToTrack.join(","),
+    //       vs_currencies: "usd",
+    //     },
+    //   }
+    // );
 
     const currentPrices = response.data;
     // console.log(currentPrices);
@@ -235,24 +235,24 @@ async function checkPriceChanges() {
     });
 
     // Если изменения есть, вызываем команду /pairs для всех пользователей
-    if (pricesUpdated) {
-      // console.log('Обновляем цены у всех пользователей');
-      for (const user of users) {
-        const fakeUpdate = {
-          message: {
-            chat: {
-              id: user.chatId,
-            },
-            from: {
-              id: user.userId,
-            },
-            text: '/pairs',  // Текст команды
-          },
-        };
-        // Программно вызываем команду /pairs
-        bot.processUpdate(fakeUpdate);
-      }
-    }
+    // if (pricesUpdated) {
+    //   // console.log('Обновляем цены у всех пользователей');
+    //   for (const user of users) {
+    //     const fakeUpdate = {
+    //       message: {
+    //         chat: {
+    //           id: user.chatId,
+    //         },
+    //         from: {
+    //           id: user.userId,
+    //         },
+    //         text: '/pairs',  // Текст команды
+    //       },
+    //     };
+    //     // Программно вызываем команду /pairs
+    //     bot.processUpdate(fakeUpdate);
+    //   }
+    // }
 
     // 3. Массив для хранения обновленных пользователей
     const updatedUsers = [];
@@ -269,7 +269,7 @@ async function checkPriceChanges() {
             Math.round(((currentPrice - pair.price) / pair.price) * 100 * 100) /
             100;
 
-          // Устанавливаем порог в 0.5%
+          // Устанавливаем порог в 1%
           if (Math.abs(priceChange) >= 1) {
             const formattedAbbreviation = pair.abbreviation.toUpperCase();
             // console.log(

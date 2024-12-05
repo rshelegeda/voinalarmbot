@@ -5,6 +5,11 @@ const schedule = require("node-schedule"); // Импортируем node-schedu
 const mongoose = require("mongoose");
 const User = require("./models/User");
 
+const express = require('express');
+const app = express();
+
+app.get('/', (req, res) => res.send('Bot is running'));
+
 const defaultPairs = require('./defaultPairs'); // Импортируем массив из файла
 const { generateButtons, getUsefulData, getPrices, updateDefaultPairsPrices, getAllUsers } = require('./utils');
 
@@ -27,7 +32,7 @@ function isRequestAllowed(userId) {
 // Подключение к MongoDB
 mongoose
   .connect(
-    "mongodb+srv://Roman:Hozo323@cluster0.fuq2s.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+    process.env.MONGO_URL
    
   )
   .then(() => console.log("Connected to MongoDB Atlas"))
@@ -366,3 +371,5 @@ bot.onText(/\/pairs/, async (msg) => {
 // Запускаем задачу раз в 20 секунд
 schedule.scheduleJob("*/60 * * * * *", checkPriceChanges);
 
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

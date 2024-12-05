@@ -27,11 +27,8 @@ function isRequestAllowed(userId) {
 // Подключение к MongoDB
 mongoose
   .connect(
-    "mongodb+srv://Roman:Hozo323@cluster0.fuq2s.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0",
-    {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    }
+    "mongodb+srv://Roman:Hozo323@cluster0.fuq2s.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+   
   )
   .then(() => console.log("Connected to MongoDB Atlas"))
   .catch((err) => console.log("Error connecting to MongoDB:", err));

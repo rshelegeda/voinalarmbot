@@ -207,19 +207,11 @@ async function checkPriceChanges() {
     // Обновляем цены в defaultPairs
     await updateDefaultPairsPrices(defaultPairs);
 
-    // Запрашиваем актуальные цены
-    // console.log("Запрос к АПИ из checkPriceChanges");
-    // const response = await axios.get(
-    //   process.env.COINGECKO_API_URL,
-    //   {
-    //     params: {
-    //       ids: pairsToTrack.join(","),
-    //       vs_currencies: "usd",
-    //     },
-    //   }
-    // );
-
-    const currentPrices = response.data;
+    // Берем актуальные цены из defaultPairs
+    const currentPrices = defaultPairs.reduce((acc, pair) => {
+      acc[pair.pair] = { usd: pair.price };
+      return acc;
+    }, {});
     console.log(currentPrices);
 
     let pricesUpdated = false; // Флаг, указывающий на изменения
@@ -234,30 +226,8 @@ async function checkPriceChanges() {
       }
     });
 
-    // Если изменения есть, вызываем команду /pairs для всех пользователей
-    // if (pricesUpdated) {
-    //   // console.log('Обновляем цены у всех пользователей');
-    //   for (const user of users) {
-    //     const fakeUpdate = {
-    //       message: {
-    //         chat: {
-    //           id: user.chatId,
-    //         },
-    //         from: {
-    //           id: user.userId,
-    //         },
-    //         text: '/pairs',  // Текст команды
-    //       },
-    //     };
-    //     // Программно вызываем команду /pairs
-    //     bot.processUpdate(fakeUpdate);
-    //   }
-    // }
-
-    // 3. Массив для хранения обновленных пользователей
+    // 3. Проверяем изменения для каждой пары каждого пользователя
     const updatedUsers = [];
-
-    // 4. Проверяем изменения для каждой пары каждого пользователя
     for (const user of users) {
       let updated = false; // Флаг для отслеживания изменений
 
@@ -290,13 +260,12 @@ async function checkPriceChanges() {
         }
       }
 
-      // Если были изменения, добавляем пользователя в список обновленных
       if (updated) {
         updatedUsers.push(user);          
       }
     }
 
-    // 5. Обновляем все измененные пользователей в базе
+    // 4. Обновляем всех измененных пользователей в базе
     await Promise.all(
       updatedUsers.map((user) =>
         User.updateOne(
@@ -310,6 +279,7 @@ async function checkPriceChanges() {
     console.error("Ошибка при проверке изменений цен:", error.message);
   }
 };
+
 
 // Обработчик команды /pairs
 bot.onText(/\/pairs/, async (msg) => {

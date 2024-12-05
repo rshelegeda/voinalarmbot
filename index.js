@@ -78,10 +78,10 @@ bot.onText(/\/start/, async (msg) => {
       trackedPairs: defaultPairs, // Массив отслеживаемых пар по умолчанию
     });
     await user.save();
-    // console.log(`User ${userId} created with default tracking pairs.`);
+    console.log(`User ${userId} created with default tracking pairs.`);
   } else {
     // Если пользователь найден, просто обновляем его chatId (если это нужно)
-    // console.log(`User ${userId} found and updated.`);
+    console.log(`User ${userId} found and updated.`);
   }
 
   // Используем массив отслеживаемых пар из базы данных
@@ -177,14 +177,14 @@ bot.on("callback_query", async (query) => {
 
 // Функция для проверки изменений цен
 async function checkPriceChanges() {
-  // console.log("Проверяем изменения цен...");
+  console.log("Проверяем изменения цен...");
 
   try {
     // Получаем всех пользователей из базы
     const users = await getAllUsers();
 
     if (users.length === 0) {
-      // console.log("Нет пользователей для проверки.");
+      console.log("Нет пользователей для проверки.");
       return;
     }
 
@@ -200,7 +200,7 @@ async function checkPriceChanges() {
     ];
 
     if (pairsToTrack.length === 0) {
-      // console.log("Нет отслеживаемых пар.");
+      console.log("Нет отслеживаемых пар.");
       return;
     }
 
@@ -220,7 +220,7 @@ async function checkPriceChanges() {
     // );
 
     const currentPrices = response.data;
-    // console.log(currentPrices);
+    console.log(currentPrices);
 
     let pricesUpdated = false; // Флаг, указывающий на изменения
 
@@ -229,7 +229,7 @@ async function checkPriceChanges() {
       const newPrice = currentPrices[pair.pair]?.usd || null;
       if (newPrice && pair.price !== newPrice) {
         pair.price = newPrice;
-        // console.log(`Цена пары ${pair.pair} обновлена в defaultPairs: ${newPrice}`);
+        console.log(`Цена пары ${pair.pair} обновлена в defaultPairs: ${newPrice}`);
         pricesUpdated = true; // Обновления были
       }
     });
@@ -272,9 +272,9 @@ async function checkPriceChanges() {
           // Устанавливаем порог в 1%
           if (Math.abs(priceChange) >= 1) {
             const formattedAbbreviation = pair.abbreviation.toUpperCase();
-            // console.log(
-            //   `${priceChange > 0 ? "🟢" : "🔴"} Цена пары ${formattedAbbreviation}/USD изменилась на ${priceChange}%`
-            // );
+            console.log(
+              `${priceChange > 0 ? "🟢" : "🔴"} Цена пары ${formattedAbbreviation}/USD изменилась на ${priceChange}%`
+            );
 
             // Отправка сообщения пользователю
             bot.sendMessage(
@@ -307,7 +307,7 @@ async function checkPriceChanges() {
     );
 
   } catch (error) {
-    // console.error("Ошибка при проверке изменений цен:", error.message);
+    console.error("Ошибка при проверке изменений цен:", error.message);
   }
 };
 

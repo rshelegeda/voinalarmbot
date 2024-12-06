@@ -31,7 +31,7 @@ function isRequestAllowed(userId) {
     return false; // Запрещаем запрос, если он был сделан слишком недавно
   }
 
-  userRequestTimestamps[userId] = now; // Обновляем время последнего запроса
+  userRequestTimestamps[userId] = now; // Обновляем время последнего запроса Проверка 
   return true;
 }
 

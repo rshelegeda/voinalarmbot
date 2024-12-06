@@ -31,7 +31,7 @@ function isRequestAllowed(userId) {
     return false; // Запрещаем запрос, если он был сделан слишком недавно
   }
 
-  userRequestTimestamps[userId] = now; // Обновляем время последнего запроса Проверка 
+  userRequestTimestamps[userId] = now; // Обновляем время последнего запроса Проверка
   return true;
 }
 
@@ -202,7 +202,8 @@ async function checkPriceChanges() {
               }: Цена пары ${formattedAbbreviation}/USD изменилась на ${priceChange}%`
             );
 
-            try { // Отслеживание на блокировку перед отправкой
+            try {
+              // Отслеживание на блокировку перед отправкой
               bot.sendMessage(
                 user.chatId,
                 `${
@@ -215,7 +216,9 @@ async function checkPriceChanges() {
               );
             } catch (error) {
               if (error.response && error.response.body.error_code === 403) {
-                console.log(`Пользователь с chatId ${user.chatId} заблокировал бота.`);
+                console.log(
+                  `Пользователь с chatId ${user.chatId} заблокировал бота.`
+                );
               } else {
                 console.error("Ошибка при отправке сообщения:", error);
               }
@@ -297,7 +300,6 @@ schedule.scheduleJob("*/60 * * * * *", checkPriceChanges);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
 
 // Обработка кнопки "Выбрать пары"
 bot.on("callback_query", async (query) => {

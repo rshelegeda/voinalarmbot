@@ -31,7 +31,7 @@ function isRequestAllowed(userId) {
     return false; // Запрещаем запрос, если он был сделан слишком недавно
   }
 
-  userRequestTimestamps[userId] = now; // Обновляем время последнего запроса Проверка 
+  userRequestTimestamps[userId] = now; // Обновляем время последнего запроса Проверка
   return true;
 }
 
@@ -202,7 +202,8 @@ async function checkPriceChanges() {
               }: Цена пары ${formattedAbbreviation}/USD изменилась на ${priceChange}%`
             );
 
-            try { // Отслеживание на блокировку перед отправкой
+            try {
+              // Отслеживание на блокировку перед отправкой
               bot.sendMessage(
                 user.chatId,
                 `${
@@ -214,10 +215,16 @@ async function checkPriceChanges() {
                 }\nНовая цена: ${currentPrice}`
               );
             } catch (error) {
-              if (error.response && error.response.body.error_code === 403) {
-                console.log(`Пользователь с chatId ${user.chatId} заблокировал бота.`);
+              if (error.code === 403) {
+                // Если ошибка 403, значит, пользователь заблокировал бота
+                console.log(`Пользователь ${user.firstName} заблокировал бота`);
+                // Вы можете добавить дополнительную логику, например, удаление этого пользователя из базы данных
               } else {
-                console.error("Ошибка при отправке сообщения:", error);
+                // Обработка других ошибок
+                console.error(
+                  "Произошла ошибка при отправке сообщения:",
+                  error
+                );
               }
             }
 
@@ -297,7 +304,6 @@ schedule.scheduleJob("*/60 * * * * *", checkPriceChanges);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
 
 // Обработка кнопки "Выбрать пары"
 bot.on("callback_query", async (query) => {

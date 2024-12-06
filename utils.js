@@ -45,7 +45,6 @@ const getUsefulData = async () => {
 
 // Функция для получения актуальных цен
 // Получаем актуальные цены из массива defaultPairs вместо запроса к API
-<<<<<<< HEAD
 // async function getPrices(trackedPairs, userId) {
 //   try {
 //     let pricesChanged = false;
@@ -99,97 +98,25 @@ async function getPrices(trackingPairs, userId) {
         : null;
       if (pair.price !== newPrice) {
         pair.price = newPrice;
-=======
-async function getPrices(trackedPairs, userId) {
-  try {
-    let pricesChanged = false;
-    
-    // Проходим по отслеживаемым парам
-    trackedPairs.forEach(pair => {
-      // Находим цену из defaultPairs
-      const defaultPair = defaultPairs.find(dPair => dPair.pair === pair.pair);
-      if (defaultPair && defaultPair.price !== pair.price) {
-        pair.price = defaultPair.price; // Обновляем цену из defaultPairs
->>>>>>> 7600844 (four)
         pricesChanged = true;
       }
     });
 
-<<<<<<< HEAD
     // Сохраняем обновленные цены в базе
     if (pricesChanged) {
       const user = await User.findOne({ userId });
       if (user) {
         user.trackedPairs = trackingPairs;
-=======
-    // Если цены обновились, сохраняем их в базе данных
-    if (pricesChanged) {
-      const user = await User.findOne({ userId });
-      if (user) {
-        user.trackedPairs = trackedPairs;
->>>>>>> 7600844 (four)
         await user.save();
       }
     }
 
-<<<<<<< HEAD
     return pricesChanged;
   } catch (error) {
     console.error("Ошибка при получении цен:", error);
     return false;
   }
 };
-=======
-    return pricesChanged; // Возвращаем, были ли обновления
-  } catch (error) {
-    console.error("Ошибка при обработке цен:", error);
-    return false;
-  }
-}
-
-
-// Обновление по АПИ
-// async function getPrices(trackingPairs, userId) {
-//   try {
-//     console.log("Запрос к АПИ из getPrices");
-//     const response = await axios.get(
-//         process.env.COINGECKO_API_URL,
-//       {
-//         params: {
-//           ids: trackingPairs.map((pair) => pair.pair).join(","),
-//           vs_currencies: "usd",
-//         },
-//       }
-//     );
-
-//     let pricesChanged = false;
-
-//     trackingPairs.forEach((pair) => {
-//       const newPrice = response.data[pair.pair]
-//         ? response.data[pair.pair].usd
-//         : null;
-//       if (pair.price !== newPrice) {
-//         pair.price = newPrice;
-//         pricesChanged = true;
-//       }
-//     });
-
-//     // Сохраняем обновленные цены в базе
-//     if (pricesChanged) {
-//       const user = await User.findOne({ userId });
-//       if (user) {
-//         user.trackedPairs = trackingPairs;
-//         await user.save();
-//       }
-//     }
-
-//     return pricesChanged;
-//   } catch (error) {
-//     console.error("Ошибка при получении цен:", error);
-//     return false;
-//   }
-// };
->>>>>>> 7600844 (four)
 
 
 // Функция для обновления цен в массиве defaultPairs

@@ -179,6 +179,11 @@ async function checkPriceChanges() {
           const priceChange =
             Math.round(((currentPrice - pair.price) / pair.price) * 100 * 100) /
             100;
+            console.log(
+              `${priceChange > 0 ? "🟢" : "🔴"} Пользователь ${
+                user.firstName
+              }: Цена пары ${formattedAbbreviation}/USD изменилась на ${priceChange}%`
+            );
 
           // Устанавливаем порог в 1%
           if (Math.abs(priceChange) >= 1) {

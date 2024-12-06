@@ -173,14 +173,14 @@ async function checkPriceChanges() {
             Math.round(((currentPrice - pair.price) / pair.price) * 100 * 100) /
             100;
 
-          const formattedAbbreviation = pair.abbreviation.toUpperCase();
-          console.log(
-            `${priceChange > 0 ? "🟢" : "🔴"} Пользователь ${
-              user.firstName
-            }: Цена пары ${formattedAbbreviation}/USD изменилась на ${priceChange}%`
-          );
+          const formattedAbbreviation = pair.abbreviation.toUpperCase();          
 
           if (Math.abs(priceChange) >= 1) {
+            console.log(
+              `${priceChange > 0 ? "🟢" : "🔴"} Пользователь ${
+                user.firstName
+              }: Цена пары ${formattedAbbreviation}/USD изменилась на ${priceChange}%`
+            );
             const message = `${
               priceChange > 0 ? "🟢" : "🔴"
             } Цена пары ${formattedAbbreviation}/USD ${

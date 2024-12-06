@@ -299,57 +299,57 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 // Обработка кнопки "Выбрать пары"
-// bot.on("callback_query", async (query) => {
-//   const { data, message, from } = query;
-//   const userId = from.id;
+bot.on("callback_query", async (query) => {
+  const { data, message, from } = query;
+  const userId = from.id;
 
-//   // Находим пользователя в базе
-//   const user = await User.findOne({ userId });
+  // Находим пользователя в базе
+  const user = await User.findOne({ userId });
 
-//   if (!user) {
-//     bot.answerCallbackQuery(query.id, { text: "Пользователь не найден!" });
-//     return;
-//   }
+  if (!user) {
+    bot.answerCallbackQuery(query.id, { text: "Пользователь не найден!" });
+    return;
+  }
 
-//   const trackedPairs = user.trackedPairs;
+  const trackedPairs = user.trackedPairs;
 
-//   if (data === "select_pair") {
-//     // Получаем цены и только потом обновляем клавиатуру
-//     const pricesUpdated = await getPrices(trackedPairs, userId);
+  if (data === "select_pair") {
+    // Получаем цены и только потом обновляем клавиатуру
+    const pricesUpdated = await getPrices(trackedPairs, userId);
 
-//     if (pricesUpdated) {
-//       const options = {
-//         reply_markup: {
-//           inline_keyboard: generateButtons(trackedPairs),
-//         },
-//       };
+    if (pricesUpdated) {
+      const options = {
+        reply_markup: {
+          inline_keyboard: generateButtons(trackedPairs),
+        },
+      };
 
-//       bot.editMessageText("Выберите пару для отслеживания:", {
-//         chat_id: message.chat.id,
-//         message_id: message.message_id,
-//         reply_markup: options.reply_markup,
-//       });
-//     } else {
-//       bot.answerCallbackQuery(query.id, { text: "Не удалось обновить цены!" });
-//     }
-//   } else {
-//     // Логика переключения состояния отслеживания
-//     const pairIndex = trackedPairs.findIndex((pair) => pair.pair === data);
-//     if (pairIndex !== -1) {
-//       trackedPairs[pairIndex].isTracked = !trackedPairs[pairIndex].isTracked;
+      bot.editMessageText("Выберите пару для отслеживания:", {
+        chat_id: message.chat.id,
+        message_id: message.message_id,
+        reply_markup: options.reply_markup,
+      });
+    } else {
+      bot.answerCallbackQuery(query.id, { text: "Не удалось обновить цены!" });
+    }
+  } else {
+    // Логика переключения состояния отслеживания
+    const pairIndex = trackedPairs.findIndex((pair) => pair.pair === data);
+    if (pairIndex !== -1) {
+      trackedPairs[pairIndex].isTracked = !trackedPairs[pairIndex].isTracked;
 
-//       // Сохраняем обновленные данные в базе
-//       user.trackedPairs = trackedPairs;
-//       await user.save();
+      // Сохраняем обновленные данные в базе
+      user.trackedPairs = trackedPairs;
+      await user.save();
 
-//       const updatedKeyboard = generateButtons(trackedPairs);
+      const updatedKeyboard = generateButtons(trackedPairs);
 
-//       await bot.editMessageReplyMarkup(
-//         { inline_keyboard: updatedKeyboard },
-//         { chat_id: message.chat.id, message_id: message.message_id }
-//       );
-//     }
-//   }
+      await bot.editMessageReplyMarkup(
+        { inline_keyboard: updatedKeyboard },
+        { chat_id: message.chat.id, message_id: message.message_id }
+      );
+    }
+  }
 
-//   bot.answerCallbackQuery(query.id); // Убираем "часики" на кнопке
-// });
+  bot.answerCallbackQuery(query.id); // Убираем "часики" на кнопке
+});

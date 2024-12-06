@@ -5,13 +5,6 @@ const schedule = require("node-schedule"); // Импортируем node-schedu
 const mongoose = require("mongoose");
 const User = require("./models/User");
 
-
-
-console.log(process.env.BOT_TOKEN, process.env.COINGECKO_API_URL, process.env.BOT_LOGO, process.env.PORT);
-  
-
-
-
 const express = require("express");
 const app = express();
 

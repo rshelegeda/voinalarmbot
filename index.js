@@ -1,21 +1,14 @@
 const TelegramBot = require("node-telegram-bot-api");
 const axios = require("axios");
-require("dotenv").config();
+// require("dotenv").config();
 const schedule = require("node-schedule"); // Импортируем node-schedule
 const mongoose = require("mongoose");
 const User = require("./models/User");
 
-const aws = require('aws-sdk');
 
-let s3 = new aws.S3({
-  bottoken: process.env.BOT_TOKEN,
-  coingecoapi: process.env.COINGECKO_API_URL,
-  botlogo: process.env.BOT_LOGO,
-  port: process.env.PORT
-});
 
-console.log(s3);
-
+console.log(process.env.BOT_TOKEN, process.env.COINGECKO_API_URL, process.env.BOT_LOGO, process.env.PORT);
+  
 
 
 

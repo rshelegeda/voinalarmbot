@@ -158,7 +158,7 @@ async function checkPriceChanges() {
       acc[pair.pair] = { usd: pair.price };
       return acc;
     }, {});
-    console.log("Актуальные цены:", currentPrices);
+    console.log("\n Актуальные цены:", currentPrices);
 
     const sendMessages = [];
 
@@ -176,11 +176,7 @@ async function checkPriceChanges() {
           const formattedAbbreviation = pair.abbreviation.toUpperCase();          
 
           if (Math.abs(priceChange) >= 1) {
-            console.log(
-              `${priceChange > 0 ? "🟢" : "🔴"} Пользователь ${
-                user.firstName
-              }: Цена пары ${formattedAbbreviation}/USD изменилась на ${priceChange}%`
-            );
+            
             const message = `${
               priceChange > 0 ? "🟢" : "🔴"
             } Цена пары ${formattedAbbreviation}/USD ${

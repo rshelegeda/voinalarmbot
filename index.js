@@ -125,14 +125,11 @@ bot.onText(/\/start/, async (msg) => {
   );
 });
 
-
-
 // Функция для проверки изменений цен
 async function checkPriceChanges() {
   console.log("Проверяем изменения цен...");
 
   try {
-    // Получаем всех пользователей из базы
     const users = await getAllUsers();
 
     if (users.length === 0) {
@@ -140,7 +137,6 @@ async function checkPriceChanges() {
       return;
     }
 
-    // Собираем уникальные пары для запросов
     const pairsToTrack = [
       ...new Set(
         users.flatMap((user) =>
@@ -156,19 +152,16 @@ async function checkPriceChanges() {
       return;
     }
 
-    // Обновляем цены в defaultPairs
     await updateDefaultPairsPrices(defaultPairs);
 
-    // Берем актуальные цены из defaultPairs
     const currentPrices = defaultPairs.reduce((acc, pair) => {
       acc[pair.pair] = { usd: pair.price };
       return acc;
     }, {});
     console.log("Актуальные цены:", currentPrices);
 
-    const sendMessages = []; // Массив для отслеживания отправок сообщений
+    const sendMessages = [];
 
-    // Проверяем изменения для каждой пары каждого пользователя
     for (const user of users) {
       for (const pair of user.trackedPairs.filter((p) => p.isTracked)) {
         const currentPrice = defaultPairs.find(
@@ -179,15 +172,15 @@ async function checkPriceChanges() {
           const priceChange =
             Math.round(((currentPrice - pair.price) / pair.price) * 100 * 100) /
             100;
-            console.log(
-              `${priceChange > 0 ? "🟢" : "🔴"} Пользователь ${
-                user.firstName
-              }: Цена пары ${formattedAbbreviation}/USD изменилась на ${priceChange}%`
-            );
 
-          // Устанавливаем порог в 1%
+          const formattedAbbreviation = pair.abbreviation.toUpperCase();
+          console.log(
+            `${priceChange > 0 ? "🟢" : "🔴"} Пользователь ${
+              user.firstName
+            }: Цена пары ${formattedAbbreviation}/USD изменилась на ${priceChange}%`
+          );
+
           if (Math.abs(priceChange) >= 1) {
-            const formattedAbbreviation = pair.abbreviation.toUpperCase();
             const message = `${
               priceChange > 0 ? "🟢" : "🔴"
             } Цена пары ${formattedAbbreviation}/USD ${
@@ -196,12 +189,18 @@ async function checkPriceChanges() {
               pair.price
             }\nНовая цена: ${currentPrice}`;
 
-            // Добавляем отправку сообщения в массив
+            console.log(
+              `${priceChange > 0 ? "🟢" : "🔴"} Пользователь ${
+                user.firstName
+              }: Цена пары ${formattedAbbreviation}/USD изменилась на ${priceChange}%`
+            );
+
+
             sendMessages.push(
               bot
                 .sendMessage(user.chatId, message)
                 .then(() => {
-                  pair.price = currentPrice; // Обновляем цену после успешной отправки
+                  pair.price = currentPrice;
                 })
                 .catch((error) => {
                   if (error.response && error.response.body.error_code === 403) {
@@ -221,22 +220,22 @@ async function checkPriceChanges() {
       }
     }
 
-    // Ждем завершения всех отправок сообщений
-    const results = await Promise.allSettled(sendMessages);
+    if (sendMessages.length > 0) {
+      const results = await Promise.allSettled(sendMessages);
 
-    // Логируем результаты отправок
-    results.forEach((result, index) => {
-      if (result.status === "rejected") {
-        console.error(`Ошибка в отправке сообщения #${index + 1}:`, result.reason);
-      }
-    });
+      const successCount = results.filter((r) => r.status === "fulfilled")
+        .length;
+      const failureCount = results.length - successCount;
 
-    // Обновляем всех измененных пользователей в базе
+      console.log(
+        `Сообщения отправлены: ${successCount}, Ошибки отправки: ${failureCount}`
+      );
+    } else {
+      console.log("Нет сообщений для отправки.");
+    }
+
     const updatedUsers = users.filter((user) =>
-      user.trackedPairs.some(
-        (pair) =>
-          pairsToTrack.includes(pair.pair) && pair.price !== currentPrices[pair.pair]?.usd
-      )
+      user.trackedPairs.some((pair) => pairsToTrack.includes(pair.pair))
     );
 
     await Promise.all(

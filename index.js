@@ -126,6 +126,7 @@ bot.onText(/\/start/, async (msg) => {
 });
 
 // Функция для проверки изменений цен
+// Функция для проверки изменений цен
 async function checkPriceChanges() {
   console.log("Проверяем изменения цен...");
 
@@ -164,7 +165,7 @@ async function checkPriceChanges() {
     }, {});
     console.log(currentPrices);
 
-    let pricesUpdated = false; // Флаг, указывающий на изменения
+    // let pricesUpdated = false; // Флаг, указывающий на изменения
 
     // 2. Обновляем defaultPairs с новыми ценами
     defaultPairs.forEach((pair) => {
@@ -180,6 +181,8 @@ async function checkPriceChanges() {
 
     // 3. Проверяем изменения для каждой пары каждого пользователя
     const updatedUsers = [];
+    const sendMessages = []; // Массив для параллельной отправки сообщений
+
     for (const user of users) {
       let updated = false; // Флаг для отслеживания изменений
 
@@ -202,30 +205,35 @@ async function checkPriceChanges() {
               }: Цена пары ${formattedAbbreviation}/USD изменилась на ${priceChange}%`
             );
 
-            try {
-              // Отслеживание на блокировку перед отправкой
-              bot.sendMessage(
-                user.chatId,
-                `${
-                  priceChange > 0 ? "🟢" : "🔴"
-                } Цена пары ${formattedAbbreviation}/USD ${
-                  priceChange > 0 ? "Выросла" : "Снизилась"
-                } более чем на ${priceChange}%!\nСтарая цена: ${
-                  pair.price
-                }\nНовая цена: ${currentPrice}`
-              );
-            } catch (error) {
-              if (error.response && error.response.body.error_code === 403) {
-                console.log(
-                  `Пользователь с chatId ${user.chatId} заблокировал бота.`
-                );
-              } else {
-                console.error("Ошибка при отправке сообщения:", error);
-              }
-            }
+            const message = `${
+              priceChange > 0 ? "🟢" : "🔴"
+            } Цена пары ${formattedAbbreviation}/USD ${
+              priceChange > 0 ? "Выросла" : "Снизилась"
+            } более чем на ${priceChange}%!\nСтарая цена: ${
+              pair.price
+            }\nНовая цена: ${currentPrice}`;
 
-            pair.price = currentPrice; // Обновляем цену в базе данных
-            updated = true; // Отмечаем, что пользователь был обновлен
+            // Добавляем в массив отправки сообщений
+            sendMessages.push(
+              bot
+                .sendMessage(user.chatId, message)
+                .then(() => {
+                  pair.price = currentPrice; // Обновляем цену в базе данных
+                  updated = true; // Отмечаем, что пользователь был обновлен
+                })
+                .catch((error) => {
+                  if (
+                    error.response &&
+                    error.response.body.error_code === 403
+                  ) {
+                    console.log(
+                      `Пользователь с chatId ${user.chatId} заблокировал бота.`
+                    );
+                  } else {
+                    console.error("Ошибка при отправке сообщения:", error);
+                  }
+                })
+            );
           }
         }
       }
@@ -234,6 +242,9 @@ async function checkPriceChanges() {
         updatedUsers.push(user);
       }
     }
+
+    // Параллельная отправка сообщений
+    await Promise.all(sendMessages);
 
     // 4. Обновляем всех измененных пользователей в базе
     await Promise.all(
@@ -244,10 +255,12 @@ async function checkPriceChanges() {
         )
       )
     );
+
+    console.log("Проверка завершена успешно.");
   } catch (error) {
     console.error("Ошибка при проверке изменений цен:", error.message);
   }
-}
+};
 
 // Обработчик команды /pairs
 bot.onText(/\/pairs/, async (msg) => {

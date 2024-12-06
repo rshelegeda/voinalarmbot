@@ -5,6 +5,20 @@ const schedule = require("node-schedule"); // Импортируем node-schedu
 const mongoose = require("mongoose");
 const User = require("./models/User");
 
+const aws = require('aws-sdk');
+
+let s3 = new aws.S3({
+  bottoken: process.env.BOT_TOKEN,
+  coingecoapi: process.env.COINGECKO_API_URL,
+  botlogo: process.env.BOT_LOGO,
+  port: process.env.PORT
+});
+
+console.log(s3);
+
+
+
+
 const express = require("express");
 const app = express();
 
@@ -297,6 +311,7 @@ schedule.scheduleJob("*/60 * * * * *", checkPriceChanges);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
 
 // Обработка кнопки "Выбрать пары"
 bot.on("callback_query", async (query) => {

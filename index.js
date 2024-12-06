@@ -125,6 +125,8 @@ bot.onText(/\/start/, async (msg) => {
   );
 });
 
+
+
 // Функция для проверки изменений цен
 async function checkPriceChanges() {
   console.log("Проверяем изменения цен...");
@@ -162,27 +164,12 @@ async function checkPriceChanges() {
       acc[pair.pair] = { usd: pair.price };
       return acc;
     }, {});
-    console.log(currentPrices);
+    console.log("Актуальные цены:", currentPrices);
 
-    let pricesUpdated = false; // Флаг, указывающий на изменения
+    const sendMessages = []; // Массив для отслеживания отправок сообщений
 
-    // 2. Обновляем defaultPairs с новыми ценами
-    defaultPairs.forEach((pair) => {
-      const newPrice = currentPrices[pair.pair]?.usd || null;
-      if (newPrice && pair.price !== newPrice) {
-        pair.price = newPrice;
-        console.log(
-          `Цена пары ${pair.pair} обновлена в defaultPairs: ${newPrice}`
-        );
-        pricesUpdated = true; // Обновления были
-      }
-    });
-
-    // 3. Проверяем изменения для каждой пары каждого пользователя
-    const updatedUsers = [];
+    // Проверяем изменения для каждой пары каждого пользователя
     for (const user of users) {
-      let updated = false; // Флаг для отслеживания изменений
-
       for (const pair of user.trackedPairs.filter((p) => p.isTracked)) {
         const currentPrice = defaultPairs.find(
           (p) => p.pair === pair.pair
@@ -196,50 +183,57 @@ async function checkPriceChanges() {
           // Устанавливаем порог в 1%
           if (Math.abs(priceChange) >= 1) {
             const formattedAbbreviation = pair.abbreviation.toUpperCase();
-            console.log(
-              `${priceChange > 0 ? "🟢" : "🔴"} Пользователь ${
-                user.firstName
-              }: Цена пары ${formattedAbbreviation}/USD изменилась на ${priceChange}%`
+            const message = `${
+              priceChange > 0 ? "🟢" : "🔴"
+            } Цена пары ${formattedAbbreviation}/USD ${
+              priceChange > 0 ? "выросла" : "снизилась"
+            } более чем на ${priceChange}%!\nСтарая цена: ${
+              pair.price
+            }\nНовая цена: ${currentPrice}`;
+
+            // Добавляем отправку сообщения в массив
+            sendMessages.push(
+              bot
+                .sendMessage(user.chatId, message)
+                .then(() => {
+                  pair.price = currentPrice; // Обновляем цену после успешной отправки
+                })
+                .catch((error) => {
+                  if (error.response && error.response.body.error_code === 403) {
+                    console.log(
+                      `❌ Пользователь с chatId ${user.chatId} заблокировал бота.`
+                    );
+                  } else {
+                    console.error(
+                      `Ошибка при отправке сообщения пользователю с chatId ${user.chatId}:`,
+                      error.message
+                    );
+                  }
+                })
             );
-
-            try {
-              // Отслеживание на блокировку перед отправкой
-              bot.sendMessage(
-                user.chatId,
-                `${
-                  priceChange > 0 ? "🟢" : "🔴"
-                } Цена пары ${formattedAbbreviation}/USD ${
-                  priceChange > 0 ? "Выросла" : "Снизилась"
-                } более чем на ${priceChange}%!\nСтарая цена: ${
-                  pair.price
-                }\nНовая цена: ${currentPrice}`
-              );
-            } catch (error) {
-              if (error.code === 403) {
-                // Если ошибка 403, значит, пользователь заблокировал бота
-                console.log(`Пользователь ${user.firstName} заблокировал бота`);
-                // Вы можете добавить дополнительную логику, например, удаление этого пользователя из базы данных
-              } else {
-                // Обработка других ошибок
-                console.error(
-                  "Произошла ошибка при отправке сообщения:",
-                  error
-                );
-              }
-            }
-
-            pair.price = currentPrice; // Обновляем цену в базе данных
-            updated = true; // Отмечаем, что пользователь был обновлен
           }
         }
       }
-
-      if (updated) {
-        updatedUsers.push(user);
-      }
     }
 
-    // 4. Обновляем всех измененных пользователей в базе
+    // Ждем завершения всех отправок сообщений
+    const results = await Promise.allSettled(sendMessages);
+
+    // Логируем результаты отправок
+    results.forEach((result, index) => {
+      if (result.status === "rejected") {
+        console.error(`Ошибка в отправке сообщения #${index + 1}:`, result.reason);
+      }
+    });
+
+    // Обновляем всех измененных пользователей в базе
+    const updatedUsers = users.filter((user) =>
+      user.trackedPairs.some(
+        (pair) =>
+          pairsToTrack.includes(pair.pair) && pair.price !== currentPrices[pair.pair]?.usd
+      )
+    );
+
     await Promise.all(
       updatedUsers.map((user) =>
         User.updateOne(
@@ -248,10 +242,141 @@ async function checkPriceChanges() {
         )
       )
     );
+
+    console.log("Проверка завершена успешно.");
   } catch (error) {
     console.error("Ошибка при проверке изменений цен:", error.message);
   }
 }
+
+
+// Функция для проверки изменений цен
+// async function checkPriceChanges() {
+//   console.log("Проверяем изменения цен...");
+
+//   try {
+//     // Получаем всех пользователей из базы
+//     const users = await getAllUsers();
+
+//     if (users.length === 0) {
+//       console.log("Нет пользователей для проверки.");
+//       return;
+//     }
+
+//     // Собираем уникальные пары для запросов
+//     const pairsToTrack = [
+//       ...new Set(
+//         users.flatMap((user) =>
+//           user.trackedPairs
+//             .filter((pair) => pair.isTracked)
+//             .map((pair) => pair.pair)
+//         )
+//       ),
+//     ];
+
+//     if (pairsToTrack.length === 0) {
+//       console.log("Нет отслеживаемых пар.");
+//       return;
+//     }
+
+//     // Обновляем цены в defaultPairs
+//     await updateDefaultPairsPrices(defaultPairs);
+
+//     // Берем актуальные цены из defaultPairs
+//     const currentPrices = defaultPairs.reduce((acc, pair) => {
+//       acc[pair.pair] = { usd: pair.price };
+//       return acc;
+//     }, {});
+//     console.log(currentPrices);
+
+//     let pricesUpdated = false; // Флаг, указывающий на изменения
+
+//     // 2. Обновляем defaultPairs с новыми ценами
+//     defaultPairs.forEach((pair) => {
+//       const newPrice = currentPrices[pair.pair]?.usd || null;
+//       if (newPrice && pair.price !== newPrice) {
+//         pair.price = newPrice;
+//         console.log(
+//           `Цена пары ${pair.pair} обновлена в defaultPairs: ${newPrice}`
+//         );
+//         pricesUpdated = true; // Обновления были
+//       }
+//     });
+
+//     // 3. Проверяем изменения для каждой пары каждого пользователя
+//     const updatedUsers = [];
+//     for (const user of users) {
+//       let updated = false; // Флаг для отслеживания изменений
+
+//       for (const pair of user.trackedPairs.filter((p) => p.isTracked)) {
+//         const currentPrice = defaultPairs.find(
+//           (p) => p.pair === pair.pair
+//         )?.price;
+
+//         if (currentPrice) {
+//           const priceChange =
+//             Math.round(((currentPrice - pair.price) / pair.price) * 100 * 100) /
+//             100;
+
+//           // Устанавливаем порог в 1%
+//           if (Math.abs(priceChange) >= 1) {
+//             const formattedAbbreviation = pair.abbreviation.toUpperCase();
+//             console.log(
+//               `${priceChange > 0 ? "🟢" : "🔴"} Пользователь ${
+//                 user.firstName
+//               }: Цена пары ${formattedAbbreviation}/USD изменилась на ${priceChange}%`
+//             );
+
+//             try {
+//               // Отслеживание на блокировку перед отправкой
+//               bot.sendMessage(
+//                 user.chatId,
+//                 `${
+//                   priceChange > 0 ? "🟢" : "🔴"
+//                 } Цена пары ${formattedAbbreviation}/USD ${
+//                   priceChange > 0 ? "Выросла" : "Снизилась"
+//                 } более чем на ${priceChange}%!\nСтарая цена: ${
+//                   pair.price
+//                 }\nНовая цена: ${currentPrice}`
+//               );
+//             } catch (error) {
+//               if (error.code === 403) {
+//                 // Если ошибка 403, значит, пользователь заблокировал бота
+//                 console.log(`Пользователь ${user.firstName} заблокировал бота`);
+//                 // Вы можете добавить дополнительную логику, например, удаление этого пользователя из базы данных
+//               } else {
+//                 // Обработка других ошибок
+//                 console.error(
+//                   "Произошла ошибка при отправке сообщения:",
+//                   error
+//                 );
+//               }
+//             }
+
+//             pair.price = currentPrice; // Обновляем цену в базе данных
+//             updated = true; // Отмечаем, что пользователь был обновлен
+//           }
+//         }
+//       }
+
+//       if (updated) {
+//         updatedUsers.push(user);
+//       }
+//     }
+
+//     // 4. Обновляем всех измененных пользователей в базе
+//     await Promise.all(
+//       updatedUsers.map((user) =>
+//         User.updateOne(
+//           { userId: user.userId },
+//           { trackedPairs: user.trackedPairs }
+//         )
+//       )
+//     );
+//   } catch (error) {
+//     console.error("Ошибка при проверке изменений цен:", error.message);
+//   }
+// }
 
 // Обработчик команды /pairs
 bot.onText(/\/pairs/, async (msg) => {

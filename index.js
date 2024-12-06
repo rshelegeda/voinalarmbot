@@ -354,3 +354,5 @@ bot.on("callback_query", async (query) => {
 
   bot.answerCallbackQuery(query.id); // Убираем "часики" на кнопке
 });
+
+// 123

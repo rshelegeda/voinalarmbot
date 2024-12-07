@@ -16,6 +16,7 @@ const userSchema = new mongoose.Schema({
       price: { type: Number, default: null },
     },
   ],
+  isBlocked: { type: Boolean, default: false }, // Новое поле
 });
 
 module.exports = mongoose.model("User", userSchema);

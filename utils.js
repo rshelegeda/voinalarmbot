@@ -145,15 +145,30 @@ async function updateDefaultPairsPrices(defaultPairs) {
   }
 };
 
-// Функция для получения всех пользователей и их данных
-async function getAllUsers() {
-    try {
-      const users = await User.find();
-      return users;
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      return [];
-    }
+
+async function getAllUsers() { // Не берем тех юзеров, у которых включен флаг блокировки
+  try {
+    // Ищем только тех пользователей, у которых isBlocked не установлен в true
+    const users = await User.find({ isBlocked: { $ne: true } });
+    return users;
+  } catch (error) {
+    console.error("Ошибка при получении пользователей:", error.message);
+    return [];
   }
+};
+
+
+
+
+// // Функция для получения всех пользователей и их данных
+// async function getAllUsers() {
+//     try {
+//       const users = await User.find();
+//       return users;
+//     } catch (error) {
+//       console.error("Error fetching users:", error);
+//       return [];
+//     }
+//   }
 
 module.exports = { generateButtons, getUsefulData, getPrices, updateDefaultPairsPrices, getAllUsers };

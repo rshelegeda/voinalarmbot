@@ -130,13 +130,14 @@ async function checkPriceChanges() {
   console.log("Проверяем изменения цен...");
 
   try {
-    const users = await getAllUsers();
+    const users = await getAllUsers(); // Заблокированные пользователи исключаются в этой функции
 
     if (users.length === 0) {
       console.log("Нет пользователей для проверки.");
       return;
     }
 
+    // Сбор уникальных пар для отслеживания
     const pairsToTrack = [
       ...new Set(
         users.flatMap((user) =>
@@ -152,13 +153,15 @@ async function checkPriceChanges() {
       return;
     }
 
+    // Обновление цен для отслеживаемых пар
     await updateDefaultPairsPrices(defaultPairs);
 
+    // Создание объекта актуальных цен
     const currentPrices = defaultPairs.reduce((acc, pair) => {
       acc[pair.pair] = { usd: pair.price };
       return acc;
     }, {});
-    console.log("\n Актуальные цены:", currentPrices);
+    console.log("\nАктуальные цены:", currentPrices);
 
     const sendMessages = [];
 
@@ -173,10 +176,9 @@ async function checkPriceChanges() {
             Math.round(((currentPrice - pair.price) / pair.price) * 100 * 100) /
             100;
 
-          const formattedAbbreviation = pair.abbreviation.toUpperCase();          
+          const formattedAbbreviation = pair.abbreviation.toUpperCase();
 
           if (Math.abs(priceChange) >= 1) {
-            
             const message = `${
               priceChange > 0 ? "🟢" : "🔴"
             } Цена пары ${formattedAbbreviation}/USD ${
@@ -191,24 +193,17 @@ async function checkPriceChanges() {
               }: Цена пары ${formattedAbbreviation}/USD изменилась на ${priceChange}%`
             );
 
-
             sendMessages.push(
               bot
                 .sendMessage(user.chatId, message)
                 .then(() => {
-                  pair.price = currentPrice;
+                  pair.price = currentPrice; // Обновляем цену в данных пользователя
                 })
                 .catch((error) => {
-                  if (error.response && error.response.body.error_code === 403) {
-                    console.log(
-                      `❌ Пользователь с chatId ${user.chatId} заблокировал бота.`
-                    );
-                  } else {
-                    console.error(
-                      `Ошибка при отправке сообщения пользователю с chatId ${user.chatId}:`,
-                      error.message
-                    );
-                  }
+                  console.error(
+                    `Ошибка при отправке сообщения пользователю с chatId ${user.chatId}:`,
+                    error.message
+                  );
                 })
             );
           }
@@ -216,6 +211,7 @@ async function checkPriceChanges() {
       }
     }
 
+    // Обработка результатов отправки сообщений
     if (sendMessages.length > 0) {
       const results = await Promise.allSettled(sendMessages);
 
@@ -230,6 +226,7 @@ async function checkPriceChanges() {
       console.log("Нет сообщений для отправки.");
     }
 
+    // Обновление данных пользователей в базе
     const updatedUsers = users.filter((user) =>
       user.trackedPairs.some((pair) => pairsToTrack.includes(pair.pair))
     );
@@ -248,6 +245,7 @@ async function checkPriceChanges() {
     console.error("Ошибка при проверке изменений цен:", error.message);
   }
 }
+
 
 
 // Функция для проверки изменений цен

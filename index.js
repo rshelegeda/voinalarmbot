@@ -86,7 +86,15 @@ bot.onText(/\/start/, async (msg) => {
     await user.save();
     console.log(`User ${userId} created with default tracking pairs.`);
   } else {
-    // Если пользователь найден, просто обновляем его chatId (если это нужно)
+    // Если пользователь найден, и блокировка включена - снимаем флаг блокировки
+    if (user.isBlocked) {
+      await User.updateOne({ chatId }, { isBlocked: false });
+      console.log(
+        `Флаг блокировки снят для пользователя ${firstName} (${chatId}).`
+      )
+    } else {
+      console.log(`Пользователь ${firstName} (${chatId}) уже активен.`);
+    }
     console.log(`User ${userId} found and updated.`);
   }
 
@@ -125,19 +133,21 @@ bot.onText(/\/start/, async (msg) => {
   );
 });
 
+
+
+
 // Функция для проверки изменений цен
 async function checkPriceChanges() {
   console.log("Проверяем изменения цен...");
 
   try {
-    const users = await getAllUsers(); // Заблокированные пользователи исключаются в этой функции
+    const users = await getAllUsers();
 
     if (users.length === 0) {
       console.log("Нет пользователей для проверки.");
       return;
     }
 
-    // Сбор уникальных пар для отслеживания
     const pairsToTrack = [
       ...new Set(
         users.flatMap((user) =>
@@ -153,15 +163,13 @@ async function checkPriceChanges() {
       return;
     }
 
-    // Обновление цен для отслеживаемых пар
     await updateDefaultPairsPrices(defaultPairs);
 
-    // Создание объекта актуальных цен
     const currentPrices = defaultPairs.reduce((acc, pair) => {
       acc[pair.pair] = { usd: pair.price };
       return acc;
     }, {});
-    console.log("\nАктуальные цены:", currentPrices);
+    console.log("\n Актуальные цены:", currentPrices);
 
     const sendMessages = [];
 
@@ -197,13 +205,24 @@ async function checkPriceChanges() {
               bot
                 .sendMessage(user.chatId, message)
                 .then(() => {
-                  pair.price = currentPrice; // Обновляем цену в данных пользователя
+                  pair.price = currentPrice;
                 })
-                .catch((error) => {
-                  console.error(
-                    `Ошибка при отправке сообщения пользователю с chatId ${user.chatId}:`,
-                    error.message
-                  );
+                .catch(async (error) => {
+                  if (error.response && error.response.body.error_code === 403) {
+                    console.log(
+                      `❌ Пользователь ${user.firstName} (${user.chatId}) заблокировал бота.`
+                    );
+                    // Обновляем флаг isBlocked
+                    await User.updateOne(
+                      { userId: user.userId },
+                      { isBlocked: true }
+                    );
+                  } else {
+                    console.error(
+                      `Ошибка при отправке сообщения пользователю с chatId ${user.chatId}:`,
+                      error.message
+                    );
+                  }
                 })
             );
           }
@@ -211,7 +230,6 @@ async function checkPriceChanges() {
       }
     }
 
-    // Обработка результатов отправки сообщений
     if (sendMessages.length > 0) {
       const results = await Promise.allSettled(sendMessages);
 
@@ -226,7 +244,6 @@ async function checkPriceChanges() {
       console.log("Нет сообщений для отправки.");
     }
 
-    // Обновление данных пользователей в базе
     const updatedUsers = users.filter((user) =>
       user.trackedPairs.some((pair) => pairsToTrack.includes(pair.pair))
     );
@@ -245,7 +262,6 @@ async function checkPriceChanges() {
     console.error("Ошибка при проверке изменений цен:", error.message);
   }
 }
-
 
 
 // Функция для проверки изменений цен

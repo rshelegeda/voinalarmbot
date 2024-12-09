@@ -313,7 +313,9 @@ bot.onText(/\/pairs/, async (msg) => {
 
 
 // Запускаем задачу раз в 60 секунд
-schedule.scheduleJob("*/60 * * * * *", checkPriceChanges);
+// schedule.scheduleJob("*/60 * * * * *", checkPriceChanges); // Каждую минуту
+schedule.scheduleJob("*/10 * * * *", checkPriceChanges); // Каждые 10 минут
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

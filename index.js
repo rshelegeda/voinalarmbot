@@ -20,7 +20,8 @@ const {
 } = require("./utils");
 
 const userRequestTimestamps = {};
-const REQUEST_LIMIT_TIME = 120000; // 120 секунд
+// const REQUEST_LIMIT_TIME = 120000; // 120 секунд
+const REQUEST_LIMIT_TIME = 600000; // 600 секунд
 
 // Функция проверки, разрешен ли запрос
 function isRequestAllowed(userId) {
@@ -64,7 +65,7 @@ bot.onText(/\/start/, async (msg) => {
   if (!allowed) {
     bot.sendMessage(
       msg.chat.id,
-      "Повторные выполнения команд /start и /pairs разрешены не чаще 1 раза в минуту. Подождите."
+      "Повторные выполнения команды /start разрешены не чаще 1 раза в 10 минут. Подождите."
     );
     return;
   }
@@ -275,7 +276,7 @@ bot.onText(/\/pairs/, async (msg) => {
   if (!allowed) {
     bot.sendMessage(
       chatId,
-      "Повторные выполнения команды /pairs разрешены не чаще 1 раза в 2 минуты. Подождите."
+      "Повторные выполнения команды /pairs разрешены не чаще 1 раза в 10 минут. Подождите."
     );
     return;
   }
@@ -314,8 +315,8 @@ bot.onText(/\/pairs/, async (msg) => {
 
 // Запускаем задачу раз в 60 секунд
 // schedule.scheduleJob("*/60 * * * * *", checkPriceChanges); // Каждую минуту
-// schedule.scheduleJob("*/10 * * * *", checkPriceChanges); // Каждые 10 минут
-schedule.scheduleJob("*/6 * * * *", checkPriceChanges); // Каждые 5 минут
+schedule.scheduleJob("*/10 * * * *", checkPriceChanges); // Каждые 10 минут
+// schedule.scheduleJob("*/6 * * * *", checkPriceChanges); // Каждые 5 минут
 
 
 const PORT = process.env.PORT || 3000;

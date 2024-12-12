@@ -5,17 +5,6 @@ const defaultPairs = require('./defaultPairs'); // Импортируем мас
 const messages = require('./localization'); // Переводы из файла
 
 
-// Функция для получения перевода
-const getTranslation = (key, lang) => {
-  // Если ключ для перевода существует, возвращаем перевод на нужном языке
-  if (messages[key] && messages[key][lang]) {
-    return messages[key][lang];
-  }
-  // Если перевода нет, возвращаем английский вариант по умолчанию
-  return messages[key]?.en || "Translation not available";
-};
-
-
 // Генерация кнопок с актуальными ценами
 function generateButtons(trackingPairs) {
   const newButtons = [];
@@ -184,4 +173,4 @@ async function getAllUsers() { // Не берем тех юзеров, у кот
 //     }
 //   }
 
-module.exports = { generateButtons, getUsefulData, getPrices, updateDefaultPairsPrices, getAllUsers, getTranslation };
+module.exports = { generateButtons, getUsefulData, getPrices, updateDefaultPairsPrices, getAllUsers };

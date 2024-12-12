@@ -21,7 +21,7 @@ const {
 } = require("./utils");
 
 const userRequestTimestamps = {};
-const REQUEST_LIMIT_TIME = 5000; // 5 секунд
+const REQUEST_LIMIT_TIME = 10000; // 10 секунд
 // const REQUEST_LIMIT_TIME = 600000; // 600 секунд
 
 // Функция проверки, разрешен ли запрос
@@ -380,9 +380,9 @@ bot.onText(/\/language/, async (msg) => {
 });
 
 // Запускаем задачу раз в 60 секунд
-schedule.scheduleJob("*/60 * * * * *", checkPriceChanges); // Каждую минуту
+// schedule.scheduleJob("*/60 * * * * *", checkPriceChanges); // Каждую минуту
 // schedule.scheduleJob("*/10 * * * *", checkPriceChanges); // Каждые 10 минут
-// schedule.scheduleJob("*/6 * * * *", checkPriceChanges); // Каждые 5 минут
+schedule.scheduleJob("*/6 * * * *", checkPriceChanges); // Каждые 6 минут
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

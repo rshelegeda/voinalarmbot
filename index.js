@@ -330,7 +330,7 @@ bot.onText(/\/language/, async (msg) => {
     // Отправляем новое сообщение
     await bot.sendMessage(
       chatId,
-      user.botLanguage ==='ru' ? "Выберите пару / пары для отслеживания:" : "Select pair(s) to track:"
+      user.botLanguage ==='ru' ? "Теперь бот использует русский язык." : "Now the bot is using English."
       
     );
   } catch (error) {

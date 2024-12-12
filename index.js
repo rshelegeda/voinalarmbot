@@ -51,6 +51,7 @@ updateDefaultPairsPrices(defaultPairs);
 bot.setMyCommands([
   { command: "/pairs", description: "Выбор пар" },
   { command: "/start", description: "Перезапуск" },
+  { command: "/language", description: "RU/EN" },
 ]);
 
 bot.onText(/\/start/, async (msg) => {

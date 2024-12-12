@@ -2,6 +2,19 @@ const axios = require("axios");
 require('dotenv').config();
 const User = require("./models/User"); // Предполагая, что модель пользователя находится в этом пути
 const defaultPairs = require('./defaultPairs'); // Импортируем массив из файла
+const messages = require('./localization'); // Переводы из файла
+
+
+// Функция для получения перевода
+const getTranslation = (key, lang) => {
+  // Если ключ для перевода существует, возвращаем перевод на нужном языке
+  if (messages[key] && messages[key][lang]) {
+    return messages[key][lang];
+  }
+  // Если перевода нет, возвращаем английский вариант по умолчанию
+  return messages[key]?.en || "Translation not available";
+};
+
 
 // Генерация кнопок с актуальными ценами
 function generateButtons(trackingPairs) {
@@ -171,4 +184,4 @@ async function getAllUsers() { // Не берем тех юзеров, у кот
 //     }
 //   }
 
-module.exports = { generateButtons, getUsefulData, getPrices, updateDefaultPairsPrices, getAllUsers };
+module.exports = { generateButtons, getUsefulData, getPrices, updateDefaultPairsPrices, getAllUsers, getTranslation };

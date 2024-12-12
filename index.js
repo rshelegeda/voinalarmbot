@@ -4,6 +4,7 @@ const axios = require("axios");
 const schedule = require("node-schedule"); // Импортируем node-schedule
 const mongoose = require("mongoose");
 const User = require("./models/User");
+const messages = require ("./localization")
 
 const express = require("express");
 const app = express();
@@ -16,7 +17,7 @@ const {
   getUsefulData,
   getPrices,
   updateDefaultPairsPrices,
-  getAllUsers,
+  getAllUsers  
 } = require("./utils");
 
 const userRequestTimestamps = {};
@@ -83,6 +84,7 @@ bot.onText(/\/start/, async (msg) => {
       dateFirstLogin,
       language,
       trackedPairs: defaultPairs, // Массив отслеживаемых пар по умолчанию
+      botLanguage: 'ru'
     });
     await user.save();
     console.log(`User ${userId} created with default tracking pairs.`);
@@ -107,17 +109,10 @@ bot.onText(/\/start/, async (msg) => {
   const lName = msg.chat.last_name || "";
   await bot.sendMessage(
     chatId,
-    "Привет, " + fName + " " + (lName ? lName : "")
-  );
+    user.botLanguage ==='ru' ? "Привет, " + fName + " " + (lName ? lName : "") : "Hello, " + fName + " " + (lName ? lName : ""));
   await bot.sendMessage(
     chatId,
-    "Этот бот создан для отслеживания изменения курса основных криптовалют к доллару США в реальном времени.\n\n" +
-      "Бот проверяет изменение цен один раз в минуту. \n\n" +
-      "Данные о курсах криптовалют предоставлены CoinGecko. Подробнее: https://www.coingecko.com/\n\n" +
-      "Вы можете выбрать валюты, которые будут отслеживаться. В случае изменения цены криптовалюты более чем на 1%, Вы получите уведомление от бота. " +
-      "Вы можете включить или отключить отслеживание, нажав на соответствующую кнопку с названием пары.\n\n" +
-      "Кнопки для перезапуска бота и показа списка пар находятся ниже в Меню.\n\n" +
-      "Бот работает в тестовом режиме и совершенствуется. Пожалуйста, используйте информацию только как ориентир и проверяйте актуальные курсы на платформах, которыми вы пользуетесь."
+    user.botLanguage ==='ru' ? messages.botDescription.ru : messages.botDescription.en   
   );
   // Получаем актуальные цены из defaultPairs
   // Отправляем цены без запроса к API
@@ -133,8 +128,6 @@ bot.onText(/\/start/, async (msg) => {
     options
   );
 });
-
-
 
 
 // Функция для проверки изменений цен
@@ -188,13 +181,7 @@ async function checkPriceChanges() {
           const formattedAbbreviation = pair.abbreviation.toUpperCase();
 
           if (Math.abs(priceChange) >= 1) {
-            const message = `${
-              priceChange > 0 ? "🟢" : "🔴"
-            } Цена пары ${formattedAbbreviation}/USD ${
-              priceChange > 0 ? "выросла" : "снизилась"
-            } более чем на ${priceChange}%!\nСтарая цена: ${
-              pair.price
-            }\nНовая цена: ${currentPrice}`;
+            const message = user.botLanguage === 'ru' ? messages.priceChangeNotification.ru : messages.priceChangeNotification.en
 
             console.log(
               `${priceChange > 0 ? "🟢" : "🔴"} Пользователь ${
@@ -276,7 +263,8 @@ bot.onText(/\/pairs/, async (msg) => {
   if (!allowed) {
     bot.sendMessage(
       chatId,
-      "Повторные выполнения команды /pairs разрешены не чаще 1 раза в 10 минут. Подождите."
+      "Повторные выполнения команды /pairs разрешены не чаще 1 раза в 10 минут. Подождите.\n\n" + 
+      "Repeated executions of the /pairs command are allowed no more than once every 10 minutes. Please wait.",
     );
     return;
   }
@@ -286,7 +274,7 @@ bot.onText(/\/pairs/, async (msg) => {
     const user = await User.findOne({ userId });
 
     if (!user) {
-      bot.sendMessage(chatId, "Пользователь не найден.");
+      bot.sendMessage(chatId, "Пользователь не найден.\n\n" + "User not found.");
       return;
     }
 
@@ -303,14 +291,15 @@ bot.onText(/\/pairs/, async (msg) => {
     // Отправляем новое сообщение
     await bot.sendMessage(
       chatId,
-      "Выберите пару / пары для отслеживания:",
+      user.botLanguage ==='ru' ? "Выберите пару / пары для отслеживания:" : "Select pair(s) to track:",
       options
     );
   } catch (error) {
     console.error("Ошибка при обработке команды /pairs:", error);
-    bot.sendMessage(chatId, "Произошла ошибка при обработке вашего запроса.");
+    bot.sendMessage(chatId, "Произошла ошибка при обработке вашего запроса\n\n." + "An error occurred while processing your request." );
   }
 });
+
 
 
 // Запускаем задачу раз в 60 секунд
@@ -349,13 +338,13 @@ bot.on("callback_query", async (query) => {
         },
       };
 
-      bot.editMessageText("Выберите пару для отслеживания:", {
+      bot.editMessageText(user.botLanguage ==="ru" ? "Выберите пару для отслеживания:" : "Select pair(s) to track:", {
         chat_id: message.chat.id,
         message_id: message.message_id,
         reply_markup: options.reply_markup,
       });
     } else {
-      bot.answerCallbackQuery(query.id, { text: "Не удалось обновить цены!" });
+      bot.answerCallbackQuery(query.id, { text: user.botLanguage === 'ru' ? "Не удалось обновить цены!" : "Failed to update prices!" });
     }
   } else {
     // Логика переключения состояния отслеживания

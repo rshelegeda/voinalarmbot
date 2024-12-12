@@ -17,6 +17,7 @@ const userSchema = new mongoose.Schema({
     },
   ],
   isBlocked: { type: Boolean, default: false }, // Новое поле
+  botLanguage: { type: String, default: "ru"}
 });
 
 module.exports = mongoose.model("User", userSchema);

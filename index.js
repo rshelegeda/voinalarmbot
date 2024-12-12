@@ -342,8 +342,8 @@ bot.onText(/\/language/, async (msg) => {
 
 
 // Запускаем задачу раз в 60 секунд
-// schedule.scheduleJob("*/60 * * * * *", checkPriceChanges); // Каждую минуту
-schedule.scheduleJob("*/10 * * * *", checkPriceChanges); // Каждые 10 минут
+schedule.scheduleJob("*/60 * * * * *", checkPriceChanges); // Каждую минуту
+// schedule.scheduleJob("*/10 * * * *", checkPriceChanges); // Каждые 10 минут
 // schedule.scheduleJob("*/6 * * * *", checkPriceChanges); // Каждые 5 минут
 
 

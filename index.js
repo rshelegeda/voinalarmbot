@@ -4,7 +4,7 @@ const axios = require("axios");
 const schedule = require("node-schedule"); // Импортируем node-schedule
 const mongoose = require("mongoose");
 const User = require("./models/User");
-const messages = require ("./localization")
+const messages = require("./localization");
 
 const express = require("express");
 const app = express();
@@ -17,7 +17,7 @@ const {
   getUsefulData,
   getPrices,
   updateDefaultPairsPrices,
-  getAllUsers  
+  getAllUsers,
 } = require("./utils");
 
 const userRequestTimestamps = {};
@@ -85,7 +85,7 @@ bot.onText(/\/start/, async (msg) => {
       dateFirstLogin,
       language,
       trackedPairs: defaultPairs, // Массив отслеживаемых пар по умолчанию
-      botLanguage: 'ru'
+      botLanguage: "ru",
     });
     await user.save();
     console.log(`User ${userId} created with default tracking pairs.`);
@@ -95,7 +95,7 @@ bot.onText(/\/start/, async (msg) => {
       await User.updateOne({ chatId }, { isBlocked: false });
       console.log(
         `Флаг блокировки снят для пользователя ${firstName} (${chatId}).`
-      )
+      );
     } else {
       console.log(`Пользователь ${firstName} (${chatId}) уже активен.`);
     }
@@ -110,10 +110,15 @@ bot.onText(/\/start/, async (msg) => {
   const lName = msg.chat.last_name || "";
   await bot.sendMessage(
     chatId,
-    user.botLanguage ==='ru' ? "Привет, " + fName + " " + (lName ? lName : "") : "Hello, " + fName + " " + (lName ? lName : ""));
+    user.botLanguage === "ru"
+      ? "Привет, " + fName + " " + (lName ? lName : "")
+      : "Hello, " + fName + " " + (lName ? lName : "")
+  );
   await bot.sendMessage(
     chatId,
-    user.botLanguage ==='ru' ? messages.botDescription.ru : messages.botDescription.en   
+    user.botLanguage === "ru"
+      ? messages.botDescription.ru
+      : messages.botDescription.en
   );
   // Получаем актуальные цены из defaultPairs
   // Отправляем цены без запроса к API
@@ -125,11 +130,12 @@ bot.onText(/\/start/, async (msg) => {
 
   bot.sendMessage(
     chatId,
-    user.botLanguage === 'ru' ? "Нажмите на кнопку ниже для выбора криптовалют:" : "Click the button below to select cryptocurrencies:",
+    user.botLanguage === "ru"
+      ? "Нажмите на кнопку ниже для выбора криптовалют:"
+      : "Click the button below to select cryptocurrencies:",
     options
   );
 });
-
 
 // Функция для проверки изменений цен
 async function checkPriceChanges() {
@@ -182,7 +188,20 @@ async function checkPriceChanges() {
           const formattedAbbreviation = pair.abbreviation.toUpperCase();
 
           if (Math.abs(priceChange) >= 1) {
-            const message = user.botLanguage === 'ru' ? messages.priceChangeNotification.ru : messages.priceChangeNotification.en
+            const message =
+              user.botLanguage === "ru"
+                ? messages.priceChangeNotification.ru(
+                    formattedAbbreviation,
+                    priceChange,
+                    pair.price,
+                    currentPrice
+                  )
+                : messages.priceChangeNotification.en(
+                    formattedAbbreviation,
+                    priceChange,
+                    pair.price,
+                    currentPrice
+                  );
 
             console.log(
               `${priceChange > 0 ? "🟢" : "🔴"} Пользователь ${
@@ -197,7 +216,10 @@ async function checkPriceChanges() {
                   pair.price = currentPrice;
                 })
                 .catch(async (error) => {
-                  if (error.response && error.response.body.error_code === 403) {
+                  if (
+                    error.response &&
+                    error.response.body.error_code === 403
+                  ) {
                     console.log(
                       `❌ Пользователь ${user.firstName} (${user.chatId}) заблокировал бота.`
                     );
@@ -222,8 +244,9 @@ async function checkPriceChanges() {
     if (sendMessages.length > 0) {
       const results = await Promise.allSettled(sendMessages);
 
-      const successCount = results.filter((r) => r.status === "fulfilled")
-        .length;
+      const successCount = results.filter(
+        (r) => r.status === "fulfilled"
+      ).length;
       const failureCount = results.length - successCount;
 
       console.log(
@@ -250,9 +273,7 @@ async function checkPriceChanges() {
   } catch (error) {
     console.error("Ошибка при проверке изменений цен:", error.message);
   }
-};
-
-
+}
 
 // Обработчик команды /pairs
 bot.onText(/\/pairs/, async (msg) => {
@@ -264,8 +285,8 @@ bot.onText(/\/pairs/, async (msg) => {
   if (!allowed) {
     bot.sendMessage(
       chatId,
-      "Повторные выполнения команды /pairs разрешены не чаще 1 раза в 10 минут. Подождите.\n\n" + 
-      "Repeated executions of the /pairs command are allowed no more than once every 10 minutes. Please wait.",
+      "Повторные выполнения команды /pairs разрешены не чаще 1 раза в 10 минут. Подождите.\n\n" +
+        "Repeated executions of the /pairs command are allowed no more than once every 10 minutes. Please wait."
     );
     return;
   }
@@ -275,7 +296,10 @@ bot.onText(/\/pairs/, async (msg) => {
     const user = await User.findOne({ userId });
 
     if (!user) {
-      bot.sendMessage(chatId, "Пользователь не найден.\n\n" + "User not found.");
+      bot.sendMessage(
+        chatId,
+        "Пользователь не найден.\n\n" + "User not found."
+      );
       return;
     }
 
@@ -292,12 +316,18 @@ bot.onText(/\/pairs/, async (msg) => {
     // Отправляем новое сообщение
     await bot.sendMessage(
       chatId,
-      user.botLanguage ==='ru' ? "Выберите пару / пары для отслеживания:" : "Select pair(s) to track:",
+      user.botLanguage === "ru"
+        ? "Выберите пару / пары для отслеживания:"
+        : "Select pair(s) to track:",
       options
     );
   } catch (error) {
     console.error("Ошибка при обработке команды /pairs:", error);
-    bot.sendMessage(chatId, "Произошла ошибка при обработке вашего запроса\n\n." + "An error occurred while processing your request." );
+    bot.sendMessage(
+      chatId,
+      "Произошла ошибка при обработке вашего запроса\n\n." +
+        "An error occurred while processing your request."
+    );
   }
 });
 
@@ -311,8 +341,8 @@ bot.onText(/\/language/, async (msg) => {
   if (!allowed) {
     bot.sendMessage(
       chatId,
-      "Повторные выполнения команды /pairs разрешены не чаще 1 раза в 10 минут. Подождите.\n\n" + 
-      "Repeated executions of the /pairs command are allowed no more than once every 10 minutes. Please wait.",
+      "Повторные выполнения команды /pairs разрешены не чаще 1 раза в 10 минут. Подождите.\n\n" +
+        "Repeated executions of the /pairs command are allowed no more than once every 10 minutes. Please wait."
     );
     return;
   }
@@ -322,30 +352,37 @@ bot.onText(/\/language/, async (msg) => {
     const user = await User.findOne({ userId });
 
     if (!user) {
-      bot.sendMessage(chatId, "Пользователь не найден.\n\n" + "User not found.");
+      bot.sendMessage(
+        chatId,
+        "Пользователь не найден.\n\n" + "User not found."
+      );
       return;
     }
-    user.botLanguage === 'ru' ? await User.updateOne({ userId }, { $set: { botLanguage: "en" }}) : await User.updateOne({ userId }, { $set: { botLanguage: "ru" }});
+    user.botLanguage === "ru"
+      ? await User.updateOne({ userId }, { $set: { botLanguage: "en" } })
+      : await User.updateOne({ userId }, { $set: { botLanguage: "ru" } });
 
     // Отправляем новое сообщение
     await bot.sendMessage(
       chatId,
-      user.botLanguage ==='en' ? "Теперь бот использует русский язык." : "Now the bot is using English."
-      
+      user.botLanguage === "en"
+        ? "Теперь бот использует русский язык."
+        : "Now the bot is using English."
     );
   } catch (error) {
     console.error("Ошибка при обработке команды /language:", error);
-    bot.sendMessage(chatId, "Произошла ошибка при обработке смены языка\n\n." + "An error occurred while processing language change." );
+    bot.sendMessage(
+      chatId,
+      "Произошла ошибка при обработке смены языка\n\n." +
+        "An error occurred while processing language change."
+    );
   }
 });
-
-
 
 // Запускаем задачу раз в 60 секунд
 schedule.scheduleJob("*/60 * * * * *", checkPriceChanges); // Каждую минуту
 // schedule.scheduleJob("*/10 * * * *", checkPriceChanges); // Каждые 10 минут
 // schedule.scheduleJob("*/6 * * * *", checkPriceChanges); // Каждые 5 минут
-
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
@@ -368,7 +405,9 @@ bot.on("callback_query", async (query) => {
   if (data === "select_pair") {
     // Получаем цены и только потом обновляем клавиатуру
     const pricesUpdated = await getPrices(trackedPairs, userId);
-    console.log("Вызов из bot.on(callback_query, async (query) => {... if (data === select_pair)" );
+    console.log(
+      "Вызов из bot.on(callback_query, async (query) => {... if (data === select_pair)"
+    );
 
     if (pricesUpdated) {
       const options = {
@@ -377,13 +416,23 @@ bot.on("callback_query", async (query) => {
         },
       };
 
-      bot.editMessageText(user.botLanguage ==="ru" ? "Выберите пару для отслеживания:" : "Select pair(s) to track:", {
-        chat_id: message.chat.id,
-        message_id: message.message_id,
-        reply_markup: options.reply_markup,
-      });
+      bot.editMessageText(
+        user.botLanguage === "ru"
+          ? "Выберите пару для отслеживания:"
+          : "Select pair(s) to track:",
+        {
+          chat_id: message.chat.id,
+          message_id: message.message_id,
+          reply_markup: options.reply_markup,
+        }
+      );
     } else {
-      bot.answerCallbackQuery(query.id, { text: user.botLanguage === 'ru' ? "Не удалось обновить цены!" : "Failed to update prices!" });
+      bot.answerCallbackQuery(query.id, {
+        text:
+          user.botLanguage === "ru"
+            ? "Не удалось обновить цены!"
+            : "Failed to update prices!",
+      });
     }
   } else {
     // Логика переключения состояния отслеживания

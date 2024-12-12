@@ -21,7 +21,7 @@ const {
 } = require("./utils");
 
 const userRequestTimestamps = {};
-// const REQUEST_LIMIT_TIME = 120000; // 120 секунд
+// const REQUEST_LIMIT_TIME = 60000; // 60 секунд
 const REQUEST_LIMIT_TIME = 600000; // 600 секунд
 
 // Функция проверки, разрешен ли запрос
@@ -125,7 +125,7 @@ bot.onText(/\/start/, async (msg) => {
 
   bot.sendMessage(
     chatId,
-    "Нажмите на кнопку ниже для выбора криптовалют:",
+    user.botLanguage === 'ru' ? "Нажмите на кнопку ниже для выбора криптовалют:" : "Click the button below to select cryptocurrencies:",
     options
   );
 });

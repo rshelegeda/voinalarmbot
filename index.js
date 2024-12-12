@@ -330,7 +330,7 @@ bot.onText(/\/language/, async (msg) => {
     // Отправляем новое сообщение
     await bot.sendMessage(
       chatId,
-      user.botLanguage ==='ru' ? "Теперь бот использует русский язык." : "Now the bot is using English."
+      user.botLanguage ==='en' ? "Теперь бот использует русский язык." : "Now the bot is using English."
       
     );
   } catch (error) {

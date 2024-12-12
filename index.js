@@ -21,8 +21,8 @@ const {
 } = require("./utils");
 
 const userRequestTimestamps = {};
-// const REQUEST_LIMIT_TIME = 60000; // 60 секунд
-const REQUEST_LIMIT_TIME = 600000; // 600 секунд
+const REQUEST_LIMIT_TIME = 5000; // 5 секунд
+// const REQUEST_LIMIT_TIME = 600000; // 600 секунд
 
 // Функция проверки, разрешен ли запрос
 function isRequestAllowed(userId) {
@@ -298,6 +298,44 @@ bot.onText(/\/pairs/, async (msg) => {
   } catch (error) {
     console.error("Ошибка при обработке команды /pairs:", error);
     bot.sendMessage(chatId, "Произошла ошибка при обработке вашего запроса\n\n." + "An error occurred while processing your request." );
+  }
+});
+
+// Обработчик команды /language
+bot.onText(/\/language/, async (msg) => {
+  const chatId = msg.chat.id;
+  const userId = msg.from.id;
+
+  // Проверка на частоту запросов
+  const allowed = isRequestAllowed(userId);
+  if (!allowed) {
+    bot.sendMessage(
+      chatId,
+      "Повторные выполнения команды /pairs разрешены не чаще 1 раза в 10 минут. Подождите.\n\n" + 
+      "Repeated executions of the /pairs command are allowed no more than once every 10 minutes. Please wait.",
+    );
+    return;
+  }
+
+  try {
+    // Находим пользователя в базе данных
+    const user = await User.findOne({ userId });
+
+    if (!user) {
+      bot.sendMessage(chatId, "Пользователь не найден.\n\n" + "User not found.");
+      return;
+    }
+    user.botLanguage === 'ru' ? await User.updateOne({ userId }, { $set: { botLanguage: "en" }}) : await User.updateOne({ userId }, { $set: { botLanguage: "ru" }});
+
+    // Отправляем новое сообщение
+    await bot.sendMessage(
+      chatId,
+      user.botLanguage ==='ru' ? "Выберите пару / пары для отслеживания:" : "Select pair(s) to track:",
+      options
+    );
+  } catch (error) {
+    console.error("Ошибка при обработке команды /language:", error);
+    bot.sendMessage(chatId, "Произошла ошибка при обработке смены языка\n\n." + "An error occurred while processing language change." );
   }
 });
 

@@ -330,8 +330,8 @@ bot.onText(/\/language/, async (msg) => {
     // Отправляем новое сообщение
     await bot.sendMessage(
       chatId,
-      user.botLanguage ==='ru' ? "Выберите пару / пары для отслеживания:" : "Select pair(s) to track:",
-      options
+      user.botLanguage ==='ru' ? "Выберите пару / пары для отслеживания:" : "Select pair(s) to track:"
+      
     );
   } catch (error) {
     console.error("Ошибка при обработке команды /language:", error);

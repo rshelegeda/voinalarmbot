@@ -54,6 +54,18 @@ const messages = {
       en: "Failed to update prices!",
       ru: "Не удалось обновить цены!",
     },
+    commandDescriptions: {
+      ru: [
+        { command: "/pairs", description: "Выбор пар" },
+        { command: "/start", description: "Перезапуск" },
+        { command: "/language", description: "RU/EN" },
+      ],
+      en: [
+        { command: "/pairs", description: "Choose pairs" },
+        { command: "/start", description: "Restart" },
+        { command: "/language", description: "RU/EN" },
+      ],
+    }
   };
   
   module.exports = messages;

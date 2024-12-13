@@ -48,11 +48,11 @@ const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
 // Обновляем цены при старте бота
 updateDefaultPairsPrices(defaultPairs);
 
-bot.setMyCommands([
-  { command: "/pairs", description: "Выбор пар" },
-  { command: "/start", description: "Перезапуск" },
-  { command: "/language", description: "RU/EN" },
-]);
+// bot.setMyCommands([
+//   { command: "/pairs", description: "Выбор пар" },
+//   { command: "/start", description: "Перезапуск" },
+//   { command: "/language", description: "RU/EN" },
+// ]);
 
 bot.onText(/\/start/, async (msg) => {
   const formattedDate = await getUsefulData();
@@ -87,6 +87,8 @@ bot.onText(/\/start/, async (msg) => {
       trackedPairs: defaultPairs, // Массив отслеживаемых пар по умолчанию
       botLanguage: "ru",
     });
+    bot.setMyCommands(messages.commandDescriptions.ru);
+
     await user.save();
     console.log(`User ${userId} created with default tracking pairs.`);
   } else {
@@ -358,9 +360,25 @@ bot.onText(/\/language/, async (msg) => {
       );
       return;
     }
-    user.botLanguage === "ru"
-      ? await User.updateOne({ userId }, { $set: { botLanguage: "en" } })
-      : await User.updateOne({ userId }, { $set: { botLanguage: "ru" } });
+
+    if (user.botLanguage === 'ru') {
+      await User.updateOne({ userId }, { $set: { botLanguage: "en" } });
+      bot.setMyCommands(messages.commandDescriptions.ru);
+
+    }
+    else {
+      await User.updateOne({ userId }, { $set: { botLanguage: "ru" } });
+      bot.setMyCommands(messages.commandDescriptions.en);
+    }
+
+    // user.botLanguage === "ru"
+    //   ? await User.updateOne({ userId }, { $set: { botLanguage: "en" } })
+    //   : await User.updateOne({ userId }, { $set: { botLanguage: "ru" } });
+    
+    //   user.botLanguage === "ru"
+    //   ? bot.setMyCommands(messages.commandDescriptions.ru)
+    //   : bot.setMyCommands(messages.commandDescriptions.en);
+          
 
     // Отправляем новое сообщение
     await bot.sendMessage(
